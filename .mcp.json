@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "stellar-raven": {
+      "url": "https://raven.stellar.buzz/sse",
+      "type": "sse"
+    }
+  }
+}
