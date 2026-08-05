@@ -23,7 +23,7 @@
 
 ---
 
-## 🏗 Repository-Specific Backend Architecture
+## 🏗 Backend Architecture
 
 The backend operates as an event-driven NestJS system coordinating off-chain order matching with on-chain Soroban events.
 
