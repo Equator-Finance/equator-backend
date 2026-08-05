@@ -14,18 +14,18 @@
 `equator-backend` powers the high-performance middleware facilitating off-chain negotiations between importers and market makers, indexing on-chain Soroban events, and managing real-time notifications.
 
 ### Tech Stack:
-* **Runtime:** Node.js (TypeScript)
-* **Web Framework:** Express.js (or NestJS)
-* **Real-time Protocol:** WebSockets (`ws` library / Socket.io)
+* **Framework:** **NestJS** (TypeScript)
+* **Runtime:** Node.js 20+
+* **Real-time Protocol:** WebSockets (`@nestjs/websockets` / Socket.io / `ws`)
 * **Database & ORM:** PostgreSQL 15 managed via **Prisma ORM**
-* **Cache & Message Broker:** Redis 7 (Pub/Sub for WebSocket scaling)
+* **Cache & Message Broker:** Redis 7 (Pub/Sub & BullMQ for job queues)
 * **Blockchain Client:** `@stellar/stellar-sdk` (Soroban RPC client)
 
 ---
 
 ## 🏗 Repository-Specific Backend Architecture
 
-The backend operates as an event-driven system coordinating off-chain order matching with on-chain Soroban events.
+The backend operates as an event-driven NestJS system coordinating off-chain order matching with on-chain Soroban events.
 
 ```mermaid
 graph TD
@@ -34,11 +34,11 @@ graph TD
         DeskUI["OTC Market Maker UI"]
     end
 
-    subgraph Backend Core ["equator-backend (Node.js / Express / TypeScript)"]
-        WSGateway["WebSocket RFQ Gateway\n(src/rfq)"]
-        Indexer["Soroban RPC Event Indexer\n(src/indexer)"]
-        Relayer["Auto-Settlement Relayer Bot\n(src/relayer)"]
-        NotifyModule["Notification Dispatcher\n(src/notifications)"]
+    subgraph Backend Core ["equator-backend (NestJS / TypeScript)"]
+        WSGateway["WebSocket RFQ Gateway\n(RfqModule / @WebSocketGateway)"]
+        Indexer["Soroban RPC Event Indexer\n(IndexerModule / IndexerService)"]
+        Relayer["Auto-Settlement Relayer Bot\n(RelayerModule / @Cron)"]
+        NotifyModule["Notification Dispatcher\n(NotificationModule)"]
     end
 
     subgraph Storage & Infrastructure ["Persistence Layer"]
@@ -72,13 +72,13 @@ graph TD
 ```text
 equator-backend/
 ├── src/
-│   ├── rfq/             # Real-time WebSocket server for RFQ order matching
-│   ├── indexer/         # Soroban RPC event listener & database sync
-│   ├── relayer/         # Automated bot executing maturity settlements
-│   ├── notifications/   # Email/Push notification dispatcher
-│   └── kyc/             # Compliance gateway (Sumsub/Persona integration)
+│   ├── rfq/             # RfqModule: WebSocket gateway for RFQ order matching
+│   ├── indexer/         # IndexerModule: Soroban RPC event listener & DB sync
+│   ├── relayer/         # RelayerModule: Cron bot executing maturity settlements
+│   ├── notifications/   # NotificationModule: Push/Email notification dispatcher
+│   └── kyc/             # KycModule: Institutional onboarding & Sumsub integration
 ├── prisma/              # Prisma database schema & migrations
-├── docker-compose.yml   # Local environment setup (Node, Postgres, Redis)
+├── docker-compose.yml   # Local environment setup (NestJS API, Postgres, Redis)
 ├── Dockerfile           # Multi-stage production container build
 └── README.md
 ```
@@ -90,7 +90,7 @@ equator-backend/
 ### Phase 1: RFQ Matching Engine & Soroban Event Indexer
 * **Goal:** Enable off-chain quote negotiation and track active Soroban contract states in real time.
 * **Key Tasks & Deliverables:**
-  * **WebSocket RFQ Server:** Build bi-directional WebSocket API for importers to broadcast RFQs and OTC desks to respond with rates.
+  * **WebSocket RFQ Server:** Build bi-directional NestJS WebSocket Gateway for importers to broadcast RFQs and OTC desks to respond with rates.
   * **Soroban Event Listener:** Poll and index Soroban RPC logs to monitor `ForwardCreated`, `MarginLocked`, and `Settled` events.
   * **Database Layer:** Implement PostgreSQL database schema to store historical quotes, contract states, and user profiles.
 
@@ -107,4 +107,4 @@ equator-backend/
 * **Goal:** Streamline institutional onboarding and provide zero-click transaction execution.
 * **Key Tasks & Deliverables:**
   * **KYC/AML Gateway:** Middleware integrating Sumsub/Persona for corporate entity verification before trading access is granted.
-  * **Auto-Settlement Relayer:** Automated bot service that triggers the `settle_at_maturity()` function on Soroban as soon as the maturity block height is reached.
+  * **Auto-Settlement Relayer:** Automated NestJS Cron bot that triggers the `settle_at_maturity()` function on Soroban as soon as the maturity block height is reached.
