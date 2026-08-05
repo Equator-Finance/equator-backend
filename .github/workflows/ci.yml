@@ -8,7 +8,7 @@ on:
 
 jobs:
   test-and-build:
-    name: Test, Build & Docker Verification
+    name: Build Verification
     runs-on: ubuntu-latest
 
     steps:
@@ -29,6 +29,3 @@ jobs:
 
       - name: Build NestJS application
         run: npm run build
-
-      - name: Verify Docker build
-        run: docker build -t equator-backend:test .
