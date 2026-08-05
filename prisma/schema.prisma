@@ -1,0 +1,63 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ContractStatus {
+  CREATED
+  FUNDED
+  ACTIVE
+  SETTLED
+  DEFAULTED
+  CANCELLED
+}
+
+model User {
+  id            String    @id @default(uuid())
+  walletAddress String    @unique
+  role          String    // "IMPORTER" | "MARKET_MAKER"
+  companyName   String?
+  createdAt     DateTime  @default(now())
+  rfqs          Rfq[]     @relation("UserRfqs")
+  quotes        Quote[]   @relation("UserQuotes")
+}
+
+model Rfq {
+  id             String    @id @default(uuid())
+  importerId     String
+  importer       User      @relation("UserRfqs", fields: [importerId], references: [id])
+  currencyPair   String    // "NGN/USD", "ARS/USD"
+  notionalUsd    Decimal
+  maturityDays   Int       // 30, 60, 90
+  status         String    // "OPEN", "MATCHED", "EXPIRED"
+  createdAt      DateTime  @default(now())
+  quotes         Quote[]
+}
+
+model Quote {
+  id             String    @id @default(uuid())
+  rfqId          String
+  rfq            Rfq       @relation(fields: [rfqId], references: [id])
+  deskId         String
+  desk           User      @relation("UserQuotes", fields: [deskId], references: [id])
+  strikeRate     Decimal
+  premiumPercent Decimal
+  status         String    // "PENDING", "ACCEPTED", "REJECTED"
+  createdAt      DateTime  @default(now())
+}
+
+model OnChainContract {
+  contractId         BigInt         @id
+  stellarTxHash      String         @unique
+  currencyPair       String
+  notionalUsd        Decimal
+  strikeRate         Decimal
+  maturityTimestamp  DateTime
+  status             ContractStatus
+  lastIndexedBlock   BigInt
+  createdAt          DateTime       @default(now())
+}
