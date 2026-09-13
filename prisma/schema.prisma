@@ -53,12 +53,21 @@ model Quote {
 
 model OnChainContract {
   contractId         BigInt         @id
-  stellarTxHash      String         @unique
+  lastEventId        String         @unique // Soroban RPC event id of the latest indexed state change
   currencyPair       String
   notionalUsd        Decimal
   strikeRate         Decimal
+  settlementRate     Decimal?
   maturityTimestamp  DateTime
   status             ContractStatus
   lastIndexedBlock   BigInt
   createdAt          DateTime       @default(now())
+}
+
+// Tracks the last Soroban ledger scanned for escrow contract events, so the
+// Indexer resumes where it left off after a restart instead of re-scanning.
+model IndexerCursor {
+  id         String   @id @default("singleton")
+  lastLedger BigInt
+  updatedAt  DateTime @updatedAt
 }
